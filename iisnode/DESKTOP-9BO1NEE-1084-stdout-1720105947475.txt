@@ -1,0 +1,3 @@
+info  - Loaded env from E:\New folder\Chatbott\.env
+> Ready on http://localhost:\\.\pipe\369e837d-9280-4acd-9a88-4f16180e8554
+DB Connection Successfull

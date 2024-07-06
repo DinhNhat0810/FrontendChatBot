@@ -1,0 +1,7 @@
+info  - Loaded env from E:\New folder\Chatbott\.env
+event - compiled successfully (921 modules)
+> Ready on http://localhost:\\.\pipe\363511e3-780c-4ba3-ba23-12b5967c13e7
+wait  - compiling /...
+event - compiled successfully in 7.5s (9147 modules)
+wait  - compiling /500...
+event - compiled successfully in 489 ms (9154 modules)

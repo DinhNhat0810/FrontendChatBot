@@ -24,29 +24,8 @@ module.exports = {
     'react/no-unescaped-entities': 'off',
     'import/no-anonymous-default-export': 'off',
 
-    // add new line above comment
-    'lines-around-comment': [
-      'error',
-      {
-        beforeLineComment: true,
-        beforeBlockComment: true,
-        allowBlockStart: true,
-        allowClassStart: true,
-        allowObjectStart: true,
-        allowArrayStart: true
-      }
-    ],
-
     // add new line above return
     'newline-before-return': 'error',
-
-    // add new line below import
-    'import/newline-after-import': [
-      'error',
-      {
-        count: 1
-      }
-    ],
 
     // add new line after each var, const, let declaration
     'padding-line-between-statements': [

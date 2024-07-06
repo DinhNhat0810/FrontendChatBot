@@ -15,11 +15,12 @@ import { Alert, Button, Modal, Snackbar, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
 import SendOutline from 'mdi-material-ui/SendOutline'
 import { sendMessages } from 'src/apiRequests/sendMessages'
-import { ApplicationSettingsOutline, Delete } from 'mdi-material-ui'
+import { ApplicationSettingsOutline, ClipboardTextPlay, Delete, PlaylistEdit } from 'mdi-material-ui'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
 import Select from '@mui/material/Select'
+import { url } from 'src/utils/constant'
 
 const rows = [
   {
@@ -50,7 +51,8 @@ const style = {
 const BotTable = () => {
   const [formData, setFormData] = useState({
     token: '',
-    name: ''
+    name: '',
+    _id: ''
   })
   const [message, setMessage] = useState('')
 
@@ -64,9 +66,18 @@ const BotTable = () => {
   const [open, setOpen] = useState(false)
   const [openModal, setOpenModal] = useState(false)
 
+  const [modalType, setModalType] = useState('')
+
   const handleOpen = () => setOpen(true)
 
-  const handleCloseModal = () => setOpenModal(false)
+  const handleCloseModal = () => {
+    setOpenModal(false)
+    setFormData({
+      name: '',
+      token: '',
+      _id: ''
+    })
+  }
 
   const handleChange = event => {
     setAge(event.target.value)
@@ -101,7 +112,7 @@ const BotTable = () => {
   }
 
   const fetchData = async () => {
-    const data = await fetch('http://localhost:4000/api/bots')
+    const data = await fetch(`${url}/api/bots`)
     const bots = await data.json()
     setBots(bots.payload)
   }
@@ -112,7 +123,7 @@ const BotTable = () => {
 
   const handleDelete = async id => {
     try {
-      const data = await fetch(`http://localhost:4000/api/bots/delete/${id}`, {
+      const data = await fetch(`${url}/api/bots/delete/${id}`, {
         method: 'DELETE'
       })
       fetchData()
@@ -123,7 +134,7 @@ const BotTable = () => {
 
   const handleAddBot = async () => {
     try {
-      const data = await fetch('http://localhost:4000/api/bots/add', {
+      const data = await fetch(`${url}/api/bots/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -140,11 +151,50 @@ const BotTable = () => {
         fetchData()
         setFormData({
           name: '',
-          token: ''
+          token: '',
+          _id: ''
         })
         setOpenModal(false)
         setMessageType('success')
         setNotification('Tạo bot thành công')
+        setOpen(true)
+      }
+
+      if (response.status === 'error') {
+        setMessageType('error')
+        setNotification(response.message)
+        setOpen(true)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleEditBot = async () => {
+    try {
+      const data = await fetch(`${url}/api/bots/update/` + formData?._id, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          token: formData.token
+        })
+      })
+
+      const response = await data.json()
+
+      if (data.status === 201) {
+        fetchData()
+        setFormData({
+          name: '',
+          token: '',
+          _id: ''
+        })
+        setOpenModal(false)
+        setMessageType('success')
+        setNotification('Cập nhật thành công')
         setOpen(true)
       }
 
@@ -177,6 +227,7 @@ const BotTable = () => {
           <Button
             onClick={() => {
               setOpenModal(true)
+              setModalType('add')
             }}
           >
             Thêm Bot
@@ -203,22 +254,49 @@ const BotTable = () => {
                         <Typography variant='caption'>{row.designation}</Typography>
                       </Box>
                     </TableCell>
-                    <TableCell>{row?.token}</TableCell>
                     <TableCell>
-                      <Button
+                      <div
                         style={{
-                          color: 'blue',
-                          cursor: 'pointer'
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       >
-                        <Delete
-                          style={{
-                            color: 'red',
-                            cursor: 'pointer'
+                        {row?.token}{' '}
+                        <ClipboardTextPlay
+                          onClick={() => {
+                            navigator.clipboard.writeText(row?.token)
+                            setMessageType('success')
+                            setNotification('Copied to clipboard')
+                            setOpen(true)
                           }}
-                          onClick={() => handleDelete(row._id)}
+                          sx={{
+                            cursor: 'pointer',
+                            fontSize: '18px',
+                            marginLeft: '10px'
+                          }}
                         />
-                      </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <PlaylistEdit
+                        onClick={() => {
+                          setOpenModal(true)
+                          setModalType('edit')
+                          setFormData({
+                            name: row.name,
+                            token: row.token,
+                            _id: row._id
+                          })
+                        }}
+                        style={{ color: 'blue', cursor: 'pointer', marginRight: 8 }}
+                      />
+                      <Delete
+                        style={{
+                          color: 'red',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleDelete(row._id)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -234,65 +312,75 @@ const BotTable = () => {
         >
           <Box sx={style}>
             <Typography id='modal-modal-title' variant='h6' component='h2'>
-              Thêm Bot
+              {modalType === 'edit' ? 'Cập nhật' : 'Thêm mới'}
             </Typography>
-            <Typography id='modal-modal-description' sx={{ mt: 2 }}>
-              <TextField
-                id='outlined-basic'
-                label='Tên Bot'
-                variant='outlined'
-                fullWidth
-                sx={{ mt: 10 }}
-                onChange={e => {
-                  setFormData({
-                    ...formData,
-                    name: e.target.value
-                  })
-                }}
-              />
-              <TextField
-                id='outlined-basic'
-                label='Token'
-                variant='outlined'
-                fullWidth
-                sx={{ mt: 10 }}
-                onChange={e => {
-                  setFormData({
-                    ...formData,
-                    token: e.target.value
-                  })
-                }}
-              />
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
+            <TextField
+              id='outlined-basic'
+              label='Tên Bot'
+              variant='outlined'
+              fullWidth
+              sx={{ mt: 10 }}
+              onChange={e => {
+                setFormData({
+                  ...formData,
+                  name: e.target.value
+                })
+              }}
+              value={formData.name}
+            />
+            <TextField
+              id='outlined-basic'
+              label='Token'
+              variant='outlined'
+              fullWidth
+              sx={{ mt: 10 }}
+              onChange={e => {
+                setFormData({
+                  ...formData,
+                  token: e.target.value
+                })
+              }}
+              value={formData.token}
+            />
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <Button
+                variant='contained'
+                sx={{ mt: 10, backgroundColor: 'blue', color: 'white', cursor: 'pointer' }}
+                onClick={() => {
+                  modalType === 'edit' ? handleEditBot() : handleAddBot()
                 }}
               >
-                <Button
-                  variant='contained'
-                  sx={{ mt: 10, backgroundColor: 'blue', color: 'white', cursor: 'pointer' }}
-                  onClick={() => {
-                    handleAddBot()
-                  }}
-                >
-                  Thêm
-                </Button>
-                <Button
-                  variant='contained'
-                  sx={{ mt: 10, backgroundColor: 'red', color: 'white', cursor: 'pointer' }}
-                  onClick={() => {
-                    setOpenModal(false)
-                  }}
-                >
-                  Đóng
-                </Button>
-              </div>
-            </Typography>
+                {modalType === 'edit' ? 'Cập nhật' : 'Thêm mới'}
+              </Button>
+              <Button
+                variant='contained'
+                sx={{ mt: 10, backgroundColor: 'red', color: 'white', cursor: 'pointer' }}
+                onClick={() => {
+                  setOpenModal(false)
+                  setFormData({
+                    name: '',
+                    token: '',
+                    _id: ''
+                  })
+                }}
+              >
+                Đóng
+              </Button>
+            </div>
           </Box>
         </Modal>
-        <Snackbar open={open} autoHideDuration={1000} onClose={handleClose}>
+        <Snackbar
+          open={open}
+          autoHideDuration={1000}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        >
           <Alert onClose={handleClose} severity={messageType} variant='filled' sx={{ width: '100%' }}>
             {notification}
           </Alert>

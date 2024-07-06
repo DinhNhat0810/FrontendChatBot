@@ -22,3 +22,12 @@ code:not([class*='language-']):after {
 code[class*='language-'] {
   padding: 0;
 }
+
+.chatbox > div {
+  position: absolute !important;
+  z-index: 9999 !important;
+}
+
+.ant-select-dropdown {
+  z-index: 3000;
+}
